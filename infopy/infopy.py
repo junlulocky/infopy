@@ -5,13 +5,14 @@ import numpy as np
 from infopy_utils import probs
 import infopy_checker as ipchk
 from numpy import array, shape, where, in1d
+from scipy.spatial import distance
 
 
 # Note: All functions default to log base e.
 
 # Variables with simple values
 e = 2.718281828459045
-pi = 3.141592653589793
+# pi = 3.141592653589793
 
 
 
@@ -114,3 +115,61 @@ def information_variation(labels_true, labels_pred):
     vio = entropy(labels_true) + entropy(labels_pred) - (2 * mutual_information(labels_true, labels_pred))
     return vio
 
+
+
+def compute_bic(X, assignments):
+
+    """
+    Computes the Bayesian information criterion (BIC) metric for a given clusters
+    bic = 0.5 * ln(N) * k - ln(likelihood) where k is number of clusters
+
+    :param X: multi dimentional input data, shape=(N, D), where N is sample number, D is dimension
+    :param assignments: clustering assignments
+    :return: BIC value
+    """
+    # assign centers and labels
+    assignments = ipchk.check_numpy_array(assignments)
+    X = ipchk.check_numpy_array(X)
+
+    s = X.shape
+    if len(s) != 2:
+        raise ValueError('X must be a 2-dimensional array.')
+
+    # assign centers and labels
+    unique_assignments = np.unique(assignments)
+
+    # unique_centers = np.zeros_like(unique_assignments)
+    # for i in range(len(unique_assignments)):
+    #     local_assignment = unique_assignments[i]  # get the k-th assignments
+    #     x_k = X[np.where(assignments == local_assignment)[0], :]  # samples in cluster k
+    #     unique_centers[i] = np.mean(x_k, axis=0)
+    centers = [np.mean(X[np.where(assignments == i)[0], :], axis=0)
+                      for i in range(len(unique_assignments))]
+
+    centers = np.array(centers)
+
+
+
+    #number of clusters
+    k = len(unique_assignments)
+    # size of the clusters
+    n = np.bincount(assignments)
+
+    #size of data set
+    N, D = X.shape
+
+    #compute variance for all clusters beforehand
+    cl_var = [(1.0 / n[i] ) *
+              sum(distance.cdist(X[np.where(assignments == i)], [centers[i]], 'euclidean')**2)
+              for i in xrange(k)]
+
+    const_term = 0.5 * k * np.log(N)
+
+    BIC = const_term - np.sum([n[i] * np.log(n[i]) -
+                         n[i] * np.log(N) -
+                         ((n[i] * D) / 2) * np.log(2*np.pi) -
+                         (n[i] / 2) * np.log(cl_var[i]) -
+                         ((n[i] - k) / 2)
+                            for i in xrange(k)])
+
+    return BIC

@@ -5,26 +5,60 @@ import numpy as np
 from infopy_utils import probs
 import infopy_checker as ipchk
 from numpy import array, shape, where, in1d
-from sklearn import metrics
 
 
-# Note: All functions default to log base 2.
+# Note: All functions default to log base e.
+
+# Variables with simple values
+e = 2.718281828459045
+pi = 3.141592653589793
 
 
 
-
-
-def entropy(x):
+def entropy(x, base=e):
+    """calculate entropy of a list"""
+    if len(x) == 0:
+        return 1.0
     x = probs(x)
     total = 0
     for x_i in x:
         if x_i == 0:
             continue
-        total -= x_i * np.log2(x_i)
+        total -= x_i * math.log(x_i, base)
     return total
 
+def normalized_mutual_information(labels_true, labels_pred, base=e):
+    """
+    :param labels_true:
+     List or numpy array.
+    :param labels_pred:
+     List or numpy array.
+    :param base:
+     The log base used in the MI calculation. Defaults to e.
+    :return:
+     Float: the normalized mutual information between labels_true and labels_pred.
 
-def mutual_information(labels_true, labels_pred, normalized=False, base=2):
+    Examples
+    --------
+
+    Perfect labelings are both homogeneous and complete, hence have
+    score 1.0::
+
+      >>> from sklearn.metrics.cluster import normalized_mutual_info_score
+      >>> normalized_mutual_information([0, 0, 1, 1], [0, 0, 1, 1])
+      1.0
+      >>> normalized_mutual_information([0, 0, 1, 1], [1, 1, 0, 0])
+      1.0
+
+    If classes members are completely split across different clusters,
+    the assignment is totally in-complete, hence the NMI is null::
+
+      >>> normalized_mutual_information([0, 0, 0, 0], [0, 1, 2, 3])
+      0.0
+    """
+    return mutual_information(labels_true, labels_pred, normalized=True, base=base)
+
+def mutual_information(labels_true, labels_pred, normalized=False, base=e):
     """
     Compute the mutual information between two sets of observations.
     First converts observations to discrete conditional probability distribution, then computes their MI.
@@ -36,7 +70,7 @@ def mutual_information(labels_true, labels_pred, normalized=False, base=2):
     :param normalized:
      Normalize the inputs. Defaults to False.
     :param base:
-     The log base used in the MI calculation. Defaults to 2.
+     The log base used in the MI calculation. Defaults to e.
     :return:
      Float: the mutual information between labels_true and labels_pred.
     """
@@ -56,7 +90,10 @@ def mutual_information(labels_true, labels_pred, normalized=False, base=2):
                                  where(labels_pred == _pred)[0]) == True)[0]) / numobs
             if pxy > 0.0:
                 mutual_info += pxy * math.log((pxy / (px * py)), base)
-    if normalized: mutual_info = mutual_info / np.log2(numobs)
+
+    h_true, h_pred = entropy(labels_true), entropy(labels_pred)
+    if normalized: mutual_info = mutual_info / max(np.sqrt(h_true * h_pred), 1e-10)
+    # if normalized: mutual_info = mutual_info / np.log(numobs)
     return mutual_info
 
 

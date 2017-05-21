@@ -99,20 +99,23 @@ def mutual_information(labels_true, labels_pred, normalized=False, base=e):
 
 
 # Variation of information
-def information_variation(labels_true, labels_pred):
+def information_variation(labels_true, labels_pred, base=e):
     """
 
     :param labels_true:
      List or numpy array
     :param y:
      List or numpy array
+    :param base:
+     log base
     :return:
      Float: the information variation of labels_true and labels_pred
     """
     labels_true, labels_pred = ipchk.check_clusterings(labels_true, labels_pred)
     labels_true = ipchk.check_numpy_array(labels_true)
     labels_pred = ipchk.check_numpy_array(labels_pred)
-    vio = entropy(labels_true) + entropy(labels_pred) - (2 * mutual_information(labels_true, labels_pred))
+    vio = entropy(labels_true, base=base) + entropy(labels_pred, base=base) - (2 * mutual_information(labels_true,
+                                                                                               labels_pred,base=base))
     return vio
 
 

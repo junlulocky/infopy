@@ -8,7 +8,7 @@ the input labels are the true label and predicted label from a clustering algori
 - normalized mutual information
 - mutual information
 - variation of information
-- a toy implementation of Bayesian information criterion (BIC).
+- a toy implementation of Bayesian information criterion (BIC)[https://en.wikipedia.org/wiki/Bayesian_information_criterion].
 
 ## References
 - Pedregosa, Fabian, et al. "Scikit-learn: Machine learning in Python." Journal of Machine Learning Research 12.Oct (2011): 2825-2830.
